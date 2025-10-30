@@ -1,0 +1,12 @@
+body { font-family: system-ui, sans-serif; margin: 24px; max-width: 960px; line-height: 1.5 }
+.card { border: 1px solid #ddd; padding: 16px; border-radius: 12px; margin: 12px 0 }
+.row { display: flex; gap: 8px; align-items: center }
+input[type=url] { padding: 8px 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem }
+button, .btn { padding: 8px 12px; border: 1px solid #888; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: inherit; cursor: pointer }
+button:hover, .btn:hover { background: #ececec }
+.btn.disabled { pointer-events: none; opacity: 0.6 }
+.muted { opacity: .8; font-size: 0.95em }
+ul { padding-left: 18px }
+li { margin: 6px 0 }
+a { color: #2a5bd7 }
+a:hover { text-decoration: underline }

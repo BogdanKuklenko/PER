@@ -1,86 +1,47 @@
-# PER
+# QuestBook GitHub-only Scraper
 
-Инструментарий для выгрузки сторигеймов с [Quest-Book.ru](https://quest-book.ru) и их просмотра в браузере.
+Сайт на GitHub Pages и workflow для выгрузки сторигеймов с [quest-book.ru](https://quest-book.ru).
+
+## Как это работает
+
+1. Включите GitHub Pages: **Settings → Pages → Deploy from a branch → main /docs**.
+2. Откройте сайт: `https://<OWNER>.github.io/<REPO>/`.
+3. Вставьте URL сторигейма и нажмите «Открыть Issue [scrape]».
+4. Подождите выполнения Actions (или запустите вручную в **Actions → Scrape Quest-Book page → Run workflow**).
+5. Обновите сайт — появятся ссылки на свежие артефакты (TXT, MD, JSON, JSON storyui).
+
+Workflow уважает `robots.txt` и принудительно ограничен доменом `quest-book.ru`.
 
 ## Структура репозитория
 
-- `tools/scrape.py` — основной скрипт выгрузки. Получает идентификатор вроде `game18149`, проверяет `robots.txt`, скачивает артефакты и собирает их в `data/<slug>/`.
-- `data/` — каталог с артефактами и индексом (`index.json`), который использует фронтенд.
-- `web/` — SPA на Vite + TypeScript для просмотра локальных HTML/JSON и выгруженных историй из `data/`.
-- `.github/workflows/scrape.yml` — GitHub Actions workflow для автоматизации выгрузки и публикации результатов.
-
-## Скрипт `tools/scrape.py`
-
-1. Установите зависимости (можно через `pipx` или виртуальное окружение):
-
-   ```bash
-   pip install requests beautifulsoup4
-   ```
-
-2. Запустите выгрузку, указав slug или полную ссылку:
-
-   ```bash
-   python tools/scrape.py --story game18149
-   # или
-   python tools/scrape.py --story https://quest-book.ru/online/game18149
-   ```
-
-3. Скрипт сформирует набор файлов:
-
-   - `story.json` — полный граф с текстом и действиями;
-   - `story_storyui.json` — упрощённый граф для фронтенда;
-   - `story.md` и `story.txt` — читаемые версии;
-   - `meta.json` — метаданные (название, описание, счётчики, ссылка на источник).
-
-   Индекс `data/index.json` обновляется автоматически.
-
-> ⚠️ Скрипт соблюдает `robots.txt` (учитывает `Crawl-Delay`) и выполняет паузы между запросами. Не используйте `--skip-robots`, если нет явного разрешения.
-
-## Workflow `scrape.yml`
-
-Workflow можно запустить двумя способами:
-
-- **Вручную** (`Run workflow`) — передайте slug или URL в поле `story`.
-- **Через Issue** — создайте Issue с упоминанием `gameXXXX` или ссылки на сторигейм и добавьте ярлык `questbook-scrape`.
-
-Действия workflow:
-
-1. Определяет slug из входных данных/Issue.
-2. Устанавливает зависимости и запускает `tools/scrape.py`.
-3. При наличии изменений коммитит их в репозиторий, загружает артефакты как build-artifact и оставляет комментарий в Issue.
-
-## Фронтенд (`web/`)
-
-Приложение позволяет:
-
-- загрузить локальный HTML/XML/JSON и распарсить его прямо в браузере;
-- просмотреть любые выгруженные истории из `data/index.json`.
-
-### Локальная разработка
-
-```bash
-cd web
-npm install
-npm run dev
+```
+questbook-gh-only/
+  README.md
+  LICENSE
+  .editorconfig
+  .gitignore
+  tools/
+    scrape.py
+  .github/
+    workflows/
+      scrape.yml
+  docs/
+    index.html
+    main.js
+    styles.css
+    data/
+      index.json
 ```
 
-Билд:
+## Definition of Done
 
-```bash
-npm run build
-npm run preview
-```
-
-После сборки статические файлы лежат в `web/dist/`.
-
-### GitHub Pages
-
-1. Сборка должна выполняться (локально либо в CI) с загрузкой содержимого `web/dist/` в ветку/каталог, который опубликован в Pages.
-2. В настройках репозитория включите Pages (Source → `GitHub Actions` или `Deploy from a branch`) и укажите `web/dist/` как целевой артефакт.
-3. Благодаря настройке `base` в `vite.config.ts` приложение корректно работает как из локальной разработки, так и из каталога GitHub Pages (`/<repo>/`).
-
-## Полезные замечания
-
-- В `data/index.json` хранится список всех выгрузок: название, счётчики, относительные пути к артефактам. Фронтенд читает этот файл без дополнительных настроек.
-- Если workflow не внёс изменений (например, артефакты уже актуальны), в Issue появится уведомление без нового коммита.
-- Для ручной отладки можно запускать `tools/scrape.py` локально, а затем открыть SPA (`npm run dev`) и указать путь к полученному `story_storyui.json`.
+- Страница на Pages доступна и показывает форму + список выгрузок.
+- Создание Issue с URL запускает workflow, который добавляет каталог `docs/data/<slug>-<timestamp>/` с файлами:
+  - `story.txt`
+  - `story.md`
+  - `story.json`
+  - `story_storyui.json`
+  - `meta.json`
+- `docs/data/index.json` пополняется новой записью (prepend).
+- Ссылки на файлы кликабельны с Pages.
+- Если `robots.txt` запрещает выгрузку, workflow завершается без файлов и без ошибок.

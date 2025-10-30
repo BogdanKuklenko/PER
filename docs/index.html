@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>QuestBook Reader (GitHub-only)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="./styles.css" rel="stylesheet">
+</head>
+<body>
+  <h1>QuestBook Reader — GitHub Pages</h1>
+
+  <section class="card">
+    <h2>Онлайн-выгрузка через GitHub Actions</h2>
+    <p>Вставьте ссылку на сторигейм (например, <code>https://quest-book.ru/online/game17109/</code>) и нажмите «Открыть Issue».</p>
+    <div class="row">
+      <input id="url" type="url" placeholder="https://quest-book.ru/online/..." style="flex:1">
+      <button id="issueBtn">Открыть Issue [scrape]</button>
+      <a id="actionsLink" class="btn" target="_blank" rel="noopener">Открыть Workflow</a>
+    </div>
+    <p class="muted">После выполнения Actions файлы появятся ниже в списке. Обновите страницу.</p>
+  </section>
+
+  <section class="card">
+    <h2>Готовые выгрузки</h2>
+    <div id="list">Загрузка...</div>
+  </section>
+
+  <script src="./main.js" type="module"></script>
+</body>
+</html>
