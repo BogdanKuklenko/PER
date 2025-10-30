@@ -66,23 +66,20 @@ jobs:
         run: |
           TS=$(date -u +"%Y%m%dT%H%M%SZ")
 
-          # Название и slug
           TITLE=$(jq -r '.title' out/meta.json)
           [ -z "$TITLE" ] && TITLE="story"
           SLUG=$(echo "$TITLE" | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')
           [ -z "$SLUG" ] && SLUG="story"
 
-          # Куда кладём файлы (внутри docs/)
           DEST="docs/data/${SLUG}-${TS}"
           mkdir -p "$DEST"
           cp -v out/* "$DEST/"
-          echo "DEST=$DEST" >> $GITHUB_ENV
 
       - name: Update docs/data/index.json (robust)
         run: |
           mkdir -p docs/data
 
-          # Если файла нет/битый — создаём корректную оболочку
+          # Если нет файла или он битый — создаём оболочку {items:[]}
           if [ ! -s docs/data/index.json ]; then
             echo '{"items":[]}' > docs/data/index.json
           else
@@ -91,10 +88,9 @@ jobs:
 
           TITLE=$(jq -r '.title' out/meta.json)
           SRC=$(jq -r '.url' out/meta.json)
-          # Путь для ссылок на Pages должен быть БЕЗ префикса docs/
-          PATH_REL=$(echo "$DEST" | sed 's#^docs/##')
+          PATH_REL="${DEST#docs/}"   # вырезаем префикс docs/
 
-          # Универсально: если index.json был массивом, превращаем в {items: <тот массив>}
+          # Если вдруг index.json был массивом — оборачиваем его в {items: ...}
           jq --arg title "$TITLE" --arg src "$SRC" --arg path "$PATH_REL" '
             ( .items? // ( if type=="array" then . else [] end ) ) as $arr
             | {items: ([{"title":$title,"source_url":$src,"path":$path}] + $arr)}
@@ -109,23 +105,18 @@ jobs:
       - name: Comment back (issues only)
         if: github.event_name == 'issues'
         env:
-          REPO_FULL: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          OWNER="${REPO_FULL%%/*}"
-          NAME="${REPO_FULL#*/}"
-          BASE="https://${OWNER}.github.io/${NAME}"
-          if [ ! -f docs/data/index.json ]; then
-            exit 0
-          fi
+          BASE="https://${OWNER}.github.io/${REPO_NAME}"
           PATH_REL=$(jq -r '.items[0].path' docs/data/index.json)
-          if [ -z "$PATH_REL" ] || [ "$PATH_REL" = "null" ]; then
-            exit 0
-          fi
+
           MD="${BASE}/${PATH_REL}/story.md"
           TXT="${BASE}/${PATH_REL}/story.txt"
           JSON="${BASE}/${PATH_REL}/story.json"
           JSONUI="${BASE}/${PATH_REL}/story_storyui.json"
+
           BODY="Готово! Ссылки:\n\n- MD: ${MD}\n- TXT: ${TXT}\n- JSON: ${JSON}\n- JSON (storyui): ${JSONUI}"
-          gh api repos/${REPO_FULL}/issues/${ISSUE_NUMBER}/comments -f body="$BODY"
+          gh api repos/${OWNER}/${REPO_NAME}/issues/${ISSUE_NUMBER}/comments -f body="$BODY"
