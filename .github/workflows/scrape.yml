@@ -53,7 +53,6 @@ jobs:
         env:
           URL: ${{ steps.inp.outputs.URL }}
         run: |
-          TS=$(date -u +"%Y%m%dT%H%M%SZ")
           # Временная папка вывода
           mkdir -p out
           python tools/scrape.py \
@@ -63,21 +62,43 @@ jobs:
             --user-agent "QuestReader-GHA/1.0 (+https://github.com/${{ github.repository }})" \
             --delay 0.0
 
+      - name: Copy artifacts to docs/data/
+        run: |
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+
+          # Название и slug
           TITLE=$(jq -r '.title' out/meta.json)
+          [ -z "$TITLE" ] && TITLE="story"
           SLUG=$(echo "$TITLE" | iconv -f utf-8 -t ascii//TRANSLIT | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')
           [ -z "$SLUG" ] && SLUG="story"
+
+          # Куда кладём файлы (внутри docs/)
           DEST="docs/data/${SLUG}-${TS}"
           mkdir -p "$DEST"
           cp -v out/* "$DEST/"
+          echo "DEST=$DEST" >> $GITHUB_ENV
 
-          # Обновляем docs/data/index.json (prepend)
-          if [ ! -f docs/data/index.json ]; then
-            mkdir -p docs/data
+      - name: Update docs/data/index.json (robust)
+        run: |
+          mkdir -p docs/data
+
+          # Если файла нет/битый — создаём корректную оболочку
+          if [ ! -s docs/data/index.json ]; then
             echo '{"items":[]}' > docs/data/index.json
+          else
+            jq -e . docs/data/index.json >/dev/null 2>&1 || echo '{"items":[]}' > docs/data/index.json
           fi
-          jq --arg title "$TITLE" --arg src "$URL" --arg path "$DEST" \
-             '.items |= [{"title":$title,"source_url":$src,"path":$path}] + .items' \
-             docs/data/index.json > docs/data/index.tmp && mv docs/data/index.tmp docs/data/index.json
+
+          TITLE=$(jq -r '.title' out/meta.json)
+          SRC=$(jq -r '.url' out/meta.json)
+          # Путь для ссылок на Pages должен быть БЕЗ префикса docs/
+          PATH_REL=$(echo "$DEST" | sed 's#^docs/##')
+
+          # Универсально: если index.json был массивом, превращаем в {items: <тот массив>}
+          jq --arg title "$TITLE" --arg src "$SRC" --arg path "$PATH_REL" '
+            ( .items? // ( if type=="array" then . else [] end ) ) as $arr
+            | {items: ([{"title":$title,"source_url":$src,"path":$path}] + $arr)}
+          ' docs/data/index.json > docs/data/index.tmp && mv docs/data/index.tmp docs/data/index.json
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -94,18 +115,17 @@ jobs:
         run: |
           OWNER="${REPO_FULL%%/*}"
           NAME="${REPO_FULL#*/}"
-          URL_PAGES="https://${OWNER}.github.io/${NAME}"
+          BASE="https://${OWNER}.github.io/${NAME}"
           if [ ! -f docs/data/index.json ]; then
             exit 0
           fi
-          LATEST_PATH=$(jq -r '.items[0].path' docs/data/index.json)
-          if [ -z "$LATEST_PATH" ] || [ "$LATEST_PATH" = "null" ]; then
+          PATH_REL=$(jq -r '.items[0].path' docs/data/index.json)
+          if [ -z "$PATH_REL" ] || [ "$PATH_REL" = "null" ]; then
             exit 0
           fi
-          REL_PATH=$(echo "$LATEST_PATH" | sed 's#^docs/##')
-          MD="${URL_PAGES}/${REL_PATH}/story.md"
-          TXT="${URL_PAGES}/${REL_PATH}/story.txt"
-          JSON="${URL_PAGES}/${REL_PATH}/story.json"
-          JSONUI="${URL_PAGES}/${REL_PATH}/story_storyui.json"
+          MD="${BASE}/${PATH_REL}/story.md"
+          TXT="${BASE}/${PATH_REL}/story.txt"
+          JSON="${BASE}/${PATH_REL}/story.json"
+          JSONUI="${BASE}/${PATH_REL}/story_storyui.json"
           BODY="Готово! Ссылки:\n\n- MD: ${MD}\n- TXT: ${TXT}\n- JSON: ${JSON}\n- JSON (storyui): ${JSONUI}"
           gh api repos/${REPO_FULL}/issues/${ISSUE_NUMBER}/comments -f body="$BODY"
