@@ -49,18 +49,18 @@ jobs:
           fi
 
       - name: Run scraper
-        id: run
         env:
           URL: ${{ steps.inp.outputs.URL }}
         run: |
-          # Временная папка вывода
           mkdir -p out
           python tools/scrape.py \
             --url "$URL" \
             --outdir "out" \
             --domain-lock \
-            --user-agent "QuestReader-GHA/1.0 (+https://github.com/${{ github.repository }})" \
-            --delay 0.0
+            --user-agent "QuestReader-GHA/1.1 (+https://github.com/${{ github.repository }})" \
+            --delay 0.7 \
+            --max-pages 600 \
+            --mode auto
 
       - name: Copy artifacts to docs/data/
         run: |
