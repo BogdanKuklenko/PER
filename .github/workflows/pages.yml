@@ -1,4 +1,4 @@
-name: Deploy static site to GitHub Pages
+name: Deploy to GitHub Pages (auto-detect)
 
 on:
   push:
@@ -17,19 +17,36 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Detect frontend location
+        id: detect
+        run: |
+          if [ -f web/package.json ]; then
+            echo "front_dir=web" >> $GITHUB_OUTPUT
+            echo "has_node=1" >> $GITHUB_OUTPUT
+          elif [ -f package.json ]; then
+            echo "front_dir=." >> $GITHUB_OUTPUT
+            echo "has_node=1" >> $GITHUB_OUTPUT
+          elif [ -f docs/index.html ]; then
+            echo "front_dir=docs" >> $GITHUB_OUTPUT
+            echo "has_node=0" >> $GITHUB_OUTPUT
+          else
+            echo "Не найден ни package.json, ни docs/index.html" >&2
+            exit 1
+          fi
+
+      - name: Setup Node (only if Node project)
+        if: steps.detect.outputs.has_node == '1'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install deps
+      - name: Install deps (ci if lock, else install)
+        if: steps.detect.outputs.has_node == '1'
+        working-directory: ${{ steps.detect.outputs.front_dir }}
         run: |
           if [ -f package-lock.json ]; then
             npm ci
@@ -38,15 +55,26 @@ jobs:
           fi
 
       - name: Build
+        if: steps.detect.outputs.has_node == '1'
+        working-directory: ${{ steps.detect.outputs.front_dir }}
         run: |
           npm run build
-          # SPA fallback: 404.html = index.html
-          cp dist/index.html dist/404.html
+          # SPA fallback
+          if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
+
+      - name: Prepare static artifact
+        run: |
+          mkdir -p ._artifact
+          if [ "${{ steps.detect.outputs.has_node }}" = "1" ]; then
+            cp -r ${{ steps.detect.outputs.front_dir }}/dist/* ._artifact/
+          else
+            cp -r docs/* ._artifact/
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist
+          path: ._artifact
 
   deploy:
     environment:
@@ -55,6 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
