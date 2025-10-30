@@ -1,0 +1,141 @@
+name: Scrape Quest-Book story
+
+on:
+  workflow_dispatch:
+    inputs:
+      story:
+        description: 'Quest-Book slug (game123) или полный URL'
+        required: true
+  issues:
+    types:
+      - opened
+      - edited
+      - labeled
+
+jobs:
+  scrape:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+        (
+          (github.event.action == 'labeled' && github.event.label.name == 'questbook-scrape') ||
+          contains(github.event.issue.labels.*.name, 'questbook-scrape')
+        )
+      )
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Determine story slug
+        id: story
+        env:
+          INPUT_STORY: ${{ github.event.inputs.story || '' }}
+        run: |
+          python <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          from pathlib import Path
+
+          event_path = Path(os.environ['GITHUB_EVENT_PATH'])
+          event = json.loads(event_path.read_text(encoding='utf-8'))
+
+          slug = os.environ.get('INPUT_STORY', '').strip()
+          if not slug:
+              body = (event.get('issue') or {}).get('body') or ''
+              candidates = re.findall(r'(https?://\S+|game\d+)', body)
+              for candidate in candidates:
+                  if candidate.startswith('http'):
+                      match = re.search(r'(game\d+)', candidate)
+                      if match:
+                          slug = match.group(1)
+                          break
+                  elif candidate.startswith('game'):
+                      slug = candidate
+                      break
+
+          if not slug:
+              print('::error::Не удалось определить идентификатор истории. Укажите gameXXXX или ссылку в описании Issue либо через workflow_dispatch input.')
+              sys.exit(1)
+
+          if slug.startswith('http'):
+              match = re.search(r'(game\d+)', slug)
+              if not match:
+                  print('::error::Не получается извлечь gameXXXX из URL.')
+                  sys.exit(1)
+              slug = match.group(1)
+
+          print(f'slug={slug}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
+              fh.write(f'slug={slug}\n')
+          PY
+
+      - name: Install dependencies
+        run: pip install --disable-pip-version-check requests beautifulsoup4
+
+      - name: Run scraper
+        id: scrape
+        run: python tools/scrape.py --story "${{ steps.story.outputs.slug }}" --output data
+
+      - name: Detect repository changes
+        id: gitstatus
+        run: |
+          if git status --porcelain | grep .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.gitstatus.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git commit -m "Add Quest-Book export for ${{ steps.story.outputs.slug }}"
+          git push
+
+      - name: Comment on issue
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const slug = process.env.SCRAPE_SLUG;
+            const changed = process.env.REPO_CHANGED === 'true';
+            const lines = [];
+            lines.push(`🔍 Запрос на выгрузку: **${slug}**`);
+            if (changed) {
+              lines.push('✅ Артефакты сохранены в каталоге `data/' + slug + '` и добавлены в индекс.');
+            } else {
+              lines.push('ℹ️ Скрипт завершился без изменений (данные уже в актуальном состоянии).');
+            }
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: lines.join('\n')
+            });
+        env:
+          SCRAPE_SLUG: ${{ steps.story.outputs.slug }}
+          REPO_CHANGED: ${{ steps.gitstatus.outputs.changed }}
+
+      - name: Upload artifacts
+        if: steps.gitstatus.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-book-${{ steps.story.outputs.slug }}
+          path: |
+            data/${{ steps.story.outputs.slug }}/
+            data/index.json
