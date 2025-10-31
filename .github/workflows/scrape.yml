@@ -57,8 +57,8 @@ jobs:
             --url "$URL" \
             --outdir "out" \
             --domain-lock \
-            --user-agent "QuestReader-GHA/1.1 (+https://github.com/${{ github.repository }})" \
-            --delay 0.7 \
+            --user-agent "QuestReader-GHA/1.2 (+https://github.com/${{ github.repository }})" \
+            --delay 0.5 \
             --max-pages 600 \
             --mode auto
 
