@@ -1,0 +1,1458 @@
+# Спасение нерядовой ели / Сторигейм / КвестБук
+
+_Источник: https://quest-book.ru/online/game17403/_
+
+
+---
+
+## [17403]
+
+var store = window.localStorage || window.sessionStorage;
+			if (store && store.getItem('night') == 'true') {
+				$(document.body).addClass('night-mode');
+			}
+
+×
+
+Добавление
+
+Создать сторигеймИнтерактивное литературное произведение в виде онлайн-игры, для создания которого используется специальный, бесплатный, онлайн-редактор. В арсенале имеется возможность применения игровой механики на основе ключевых слов и "ресурсов" (параметров), но вы можете создавать и простые вариативные истории.
+
+Добавить книгу-игруБольшой интерактивный роман, зачастую содержащий сложные игровые механики (или вовсе без них), но в классическом виде игро-чтения с бумаги или экрана (pdf, word, txt и т.п.). Такое произведение создаётся силами автора оффлайн и публикуется после проведения вёрстки текста (если требуется) и подготовки обложки.
+
+ <div class="divider"></div>
+
+Закрыть
+
+.navbar .navbar-burger {
+				margin-top: 7px;
+			}
+
+			.navbar-translate {
+				max-width: 23%
+			}
+
+			.navbar-translate .navbar-brand img {
+				/*width:100%;*/
+			}
+
+			@media only screen and (max-width: 1024px) {
+				.navbar-translate {
+					max-width: 100%
+				}
+				.navbar-translate .navbar-brand {
+					overflow: hidden;
+					display: block;
+				}
+				.navbar-translate .navbar-brand img {
+					max-width: 85%;
+					padding: .25em;
+				}
+				.navbar-translate .navbar-brand img {
+					height: 48px !important;
+				}
+			}
+
+			.header-logo-w {
+				display: none;
+			}
+			.night-mode .header-logo-b {
+				display: none;
+			}
+			.night-mode .header-logo-w {
+				display: inline;
+			}
+
+-
+Создать
+
+-
+Сторигеймы
+
+-
+Книги-игры
+
+-
+Сообщество
+
+-
+Поиск
+
+-
+Ночной режим
+
+-
+Дневной режим
+
+ HIDED ON REGISTER PAGE
+-
+Войти
+
+ loginDialog
+
+ <div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h5 class="modal-title" id="loginDialogLabel">Вход в учётную запись</h5>
+					</div>
+
+Отменить
+
+ END: loginDialog
+
+Найти
+
+			.search-form-cnt .search-results {
+				display:none;
+			}
+			.search-form-cnt .search-results {
+				background: white;
+				border: 0px solid #fff;
+				border-bottom-left-radius: .25rem;
+				border-bottom-right-radius: .25rem;
+				overflow: hidden;
+
+			    position: absolute;
+				z-index: 1000;
+				box-shadow: 0px 6px 5px #60595382;
+				right: 15px;
+				left: 15px;
+			}
+			.search-form-cnt .siteSearchForm .search-input:focus {
+				border-top:1px solid #ddd;
+				border-right: 1px solid #ddd;
+				border-left: 1px solid #ddd;
+				border-bottom: 0px solid #ddd;
+			}
+			.search-form-cnt.results .no-bbr-i-r {
+				border-bottom-left-radius: 0px;
+				border-bottom-right-radius: 0px;
+				border-bottom: 0px;
+			}
+			.search-form-cnt.results .search-results {
+				display:block;
+			}
+			.search-form-cnt.results .search-result a {
+				display: block;
+				padding: 0.25em;
+				border-right: 1px solid #ddd;
+				border-left: 1px solid #ddd;
+			}
+			.search-form-cnt.results .search-result a:hover {
+				background: #1b8dbb;
+				color: white;
+				border-right: 1px solid #1b8dbb;
+				border-left: 1px solid #1b8dbb;
+			}
+
+			$(document).ready(function() {
+				var urlTypes = {
+					'ONLINE': '<i class="far fa-play-circle"></i>',
+					'URL_TOPIC': '<i class="far fa-comments"></i>',
+					'GAMEBOOK': '<i class="fal fa-book"></i>',
+					'PROFILE': '<i class="fas fa-user-circle"></i>'
+				};
+				var searchTimer;
+				var form = $('.search-form-cnt');
+				$(document).on('keyup', '.siteSearchForm .search-input', function(e) {
+					var val = (function(i) {
+						return function(v) {
+							return v ? i.val(v) : $.trim(i.val());
+						}
+					})($(this));
+					if (e.which == 27) {
+						val('');
+						form.removeClass('results');
+						return false;
+					}
+					var value = val();
+					if (value.length > 2) {
+						clearTimeout(searchTimer);
+						searchTimer = setTimeout(function() {
+							$.ajax({
+								url: '/search/' + value,
+								type: 'get',
+								dataType: 'json',
+								success: function(response) {
+									if (response.result == 'ok' && response.data && response.data.length && value == val()) {
+										form.addClass('results');
+										var html = $('<div class=""></div>');
+										$.each(response.data, function() {
+											var rec = this;
+											var s = rec.title.replace(new RegExp('(' + value + ')','gi'), '<b>$1</b>');
+											var item = $('<div class="search-result"><a href="'+rec.url+'">&nbsp;'+urlTypes[rec.type]+'&nbsp;'+s+'</a></div>');
+											html.append(item);
+										});
+										var item = $('<div class="search-result"><a href="#">&nbsp;<i class="fal fa-file-search"></i>&nbsp;<i>полный поиск по подстроке "'+value+'" на страницах сайта</i></a></div>');
+										$('a', item).click(function() {
+											$(this).parents('form')[0].submit();
+											return false;
+										});
+										html.append(item);
+										$('.search-results', form).html('').append(html);
+									} else {
+										form.removeClass('results');
+									}
+								}
+							});
+						}, 250);
+					} else {
+						form.removeClass('results');
+					}
+					return false;
+				});
+			});
+
+	.mitril-image.article-img0 {
+	  float: left;
+	  width: 30%;
+	  margin-right: 2em;
+	  margin-bottom: 1em;
+	}
+	.mitril-image.article-img1 {
+	  width: 100%;
+	  margin-bottom: 1em;
+	}
+	.mitril-image.article-img2 {
+	  float: right;
+	  width: 30%;
+	  margin-left: 2em;
+	  margin-bottom: 1em;
+	}
+
+	@media screen and (max-width: 700px) {
+		.mitril-image.article-img0 {
+		  width: 100%;
+		}
+		.mitril-image.article-img2 {
+		  width: 100%;
+		}
+	}
+
+	#main {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.actionContainer.Visible {
+		border-style: solid;
+		border-width: 0px 0.3em 0.3em 0px; /*0px 0px 3px*/
+		box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1) inset;
+		border-radius: 6px;
+		cursor: pointer;
+		display: block;
+		font-style: normal;
+		overflow: hidden;
+		text-align: left;
+		text-decoration: none;
+		/*text-overflow: ellipsis;*/
+		transition: all 200ms ease-in-out 0s;
+		white-space: nowrap;
+		padding: 9px 29px 8px;
+		white-space: normal;
+
+		border-color: #326E99;
+		background-color: #3F8ABF;
+
+		margin-bottom: 7px;
+		font-size: 1.2rem;
+	}
+
+	.textContainer {
+		font-size: 1.15rem;
+		margin-bottom: 0.75em;
+	}
+
+	.text-small .textContainer {
+		font-size: 1.00rem;
+	}
+
+	.text-big .textContainer {
+		font-size: 1.3rem;
+	}
+
+	.actionContainer.Visible * {
+		color: #FFFFFF !important;
+		text-decoration: none;
+	}
+
+	.actionContainer.Visible .a-hover {
+		display: none;
+	}
+
+	.actionContainer.Visible:hover .a-hover {
+		display: inline;
+	}
+
+	.actionContainer.Visible:hover .a-unhover {
+		display: none;
+	}
+
+	#main_text, #old_text {
+		font-size: 120%
+		padding: 1em;
+	}
+
+	#old_text br, #main_text br {
+		margin-bottom: 0.75em;
+		display: block;
+		content: '';
+	}
+
+	#actions {
+	}
+
+	/*.soundtrack .layout_playlist.layout_subtitle.platform_pc.loaded {
+		background: none !important;
+	}
+
+	.soundtrack .block.block-header__info {
+		display: none;
+	}
+
+	.layout_playlist.layout_subtitle.platform_pc.loaded {
+		background: none !important;
+	}*/
+
+	/*************************************************************/
+
+	.actionContainer.Visible.btnDefault {
+		background: none;
+		border-color: #dddddd;
+		border-width: 1px 0.3em 0.3em 1px;
+	}
+
+	.actionContainer.Visible.btnDefault * {
+		color: black !important;
+	}
+
+	.actionContainer.Visible.btnBlue {
+		border-color: #326E99;
+		background-color: #3F8ABF;
+	}
+
+	.actionContainer.Visible.btnRed {
+		background-color: #dd6688;
+		border-color: #aa2244;
+	}
+
+	.actionContainer.Visible.btnGreen {
+		background-color: #99eebb;
+		border-color: #22aa44;
+	}
+
+	.actionContainer.Visible.btnGreen * {
+		color: black !important;
+	}
+
+	.actionContainer.Visible.btnWhite {
+		background-color: white;
+		border-color: #aaaaaa;
+	}
+
+	.actionContainer.Visible.btnWhite * {
+		color: black !important;
+	}
+
+	.actionContainer.Visible.btnOrange {
+		background-color: #f9d65f;
+		border-color: #b78f1e;
+	}
+
+	.actionContainer.Visible.btnOrange * {
+		color: black !important;
+	}
+
+	.actionContainer.Visible.btnGrey {
+		background-color: #747777;
+		border-color: #242321;
+	}
+
+	.actionContainer .action-artefact {
+		color: white;
+		background: #b94125;
+		font-size: 85%;
+		display: inline-block;
+		border-radius: 4px;
+		margin-left:1rem;
+	}
+
+	.actionContainer .action-artefact .artefact-name {
+		font-weight: bold;
+	}
+
+	/**********/
+
+	.user-online {
+		position: relative;
+		max-height: 32px;
+		max-width: 32px;
+		display: inline-block;
+		margin-left: 2px;
+		margin-bottom: 3px;
+	}
+
+	#cs-main {
+		position: static;
+		position: sticky;
+		top: 60px;
+		z-index: 10;
+		/*background: #fefefb;*/
+	}
+
+	@media screen and (max-width: 750px) {
+		#cs-main {
+			position: static;
+		}
+
+		.card {
+			background: none;
+			box-shadow: none !important;
+		}
+
+		.card-header {
+			background: none;
+			box-shadow: none !important;
+			font-weight: bold;
+			margin-bottom: 0.35em;
+		}
+
+		.card-body {
+			background: none;
+			box-shadow: none !important;
+		}
+	}
+
+	.night-mode .actionContainer.Visible.btnDefault * {
+		color: #eee !important;
+	}
+
+	#onlineTab.nav-tabs .nav-item .nav-link.active::before, #onlineTab.nav-tabs .nav-item .nav-link.active:hover::before, #onlineTab.nav-tabs .nav-item .nav-link.active:focus::before,
+	#onlineTab.nav-tabs .nav-item .nav-link.active::after, #onlineTab.nav-tabs .nav-item .nav-link.active:hover::after, #onlineTab.nav-tabs .nav-item .nav-link.active:focus::after {
+		content: none;
+	}
+
+	/*****************/
+
+	.nav-tabs .nav-item .nav-link.active, .nav-tabs .nav-item .nav-link.active:hover, .nav-tabs .nav-item .nav-link.active:focus {
+		font-weight: bold;
+		border-bottom: 1px solid #444;
+	}
+
+	.online-chat .chat {
+		max-height: 10em;
+		overflow-y: auto;
+		border: 1px solid #bbb;
+		margin: 3px;
+		overflow-x: hidden;
+	}
+
+	.chat .msg-info {
+		font-size: 90%;
+		margin-bottom: -4px;
+		opacity: 0.8;
+	}
+
+	.chat .message {
+		padding: 0.15em;
+		color: black !important;
+		font-size: 95%;
+	}
+
+	.chat-form .input-group-sm .form-control {
+		height: 30px;
+	}
+
+	/****************/
+
+	.textContainer {
+		color: black;
+	}
+
+	.night-mode .textContainer {
+		color: #ccc;
+	}
+
+	.atril-game {
+		min-height: 60vh;
+	}
+
+	#main_text {
+		overflow: hidden;
+		clear: both;
+	}
+
+	/*
+
+	.btn {
+		background: none;
+		color: #111;
+		border-width: 1px !important;
+	}
+
+	.modal-dialog .btn {
+		border-width: 1px !important;
+	}*/
+
+	.textContainer > li {
+	    margin-left: 2.5rem;
+	}
+
+	#charsheet-change-history {
+		border-top: 1px dashed #eee;
+		padding: 2%;
+		margin-top: 1em;
+		max-height: 4rem;
+		overflow-y: auto;
+		color: #aaa;
+		font-size: 90%;
+		width:110%;
+	}
+
+	#charsheet-change-history:empty {
+		display: none;
+	}
+
+	h4 {
+		margin-top: 0.75em;
+		margin-bottom: 0.25em;
+	}
+
+	.textContainer ul li {
+		font-size: 1.15rem;
+	}
+
+ MAIN
+
+ИГРА ОКОНЧЕНА!
+
+Вам нравятся сторигеймы?
+
+Сайт КвестБук это некоммерческий проект и все игры доступны без ограничений и рекламы. Главной мотивацией авторов создавать новые игры являются ваши оценки ("нравится" или "не нравится") и комментарии. Даже отрицательная оценка игре - лучше чем полное её игнорирование.
+
+Войдите под своим именем или зарегистрируйтесь в несколько кликов и вы получите возможность оценивать и комментировать игры, что может мотивировать авторов создавать новые игры - для вас!
+
+Начать заново
+Перейти к обсуждению
+Другие игры
+
+Новости КвестБук
+
+Книги-игры, сторигеймы - текстовые квесты во всех проявлениях. Новости интерактивной литературы, советы авторам и юмор на тему.
+
+Открыть в Telegram
+
+Читать этот сторигейм в Telegram
+
+ MAIN
+
+ RIGHT MENU
+
+Спасение нерядовой елиPete Pr
+
+  top:-53px;height:85px;
+
+-
+Игроки
+
+-
+Чат игры
+
+Начать заново
+В редактор
+Ошибка!
+
+									Анимация переходов
+
+  
+
+var Base64 = {
+	// private property
+	_keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+	// public method for encoding
+	encode : function (input) {
+		var output = "";
+		var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+		var i = 0;
+
+		input = Base64._utf8_encode(input);
+
+		while (i < input.length) {
+
+			chr1 = input.charCodeAt(i++);
+			chr2 = input.charCodeAt(i++);
+			chr3 = input.charCodeAt(i++);
+
+			enc1 = chr1 >> 2;
+			enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+			enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+			enc4 = chr3 & 63;
+
+			if (isNaN(chr2)) {
+				enc3 = enc4 = 64;
+			} else if (isNaN(chr3)) {
+				enc4 = 64;
+			}
+
+			output = output +
+			this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+			this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+
+		}
+
+		return output;
+	},
+
+	// public method for decoding
+	decode : function (input) {
+		var output = "";
+		var chr1, chr2, chr3;
+		var enc1, enc2, enc3, enc4;
+		var i = 0;
+
+		input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+		while (i < input.length) {
+
+			enc1 = this._keyStr.indexOf(input.charAt(i++));
+			enc2 = this._keyStr.indexOf(input.charAt(i++));
+			enc3 = this._keyStr.indexOf(input.charAt(i++));
+			enc4 = this._keyStr.indexOf(input.charAt(i++));
+
+			chr1 = (enc1 << 2) | (enc2 >> 4);
+			chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+			chr3 = ((enc3 & 3) << 6) | enc4;
+
+			output = output + String.fromCharCode(chr1);
+
+			if (enc3 != 64) {
+				output = output + String.fromCharCode(chr2);
+			}
+			if (enc4 != 64) {
+				output = output + String.fromCharCode(chr3);
+			}
+
+		}
+
+		output = Base64._utf8_decode(output);
+
+		return output;
+
+	},
+
+	// private method for UTF-8 encoding
+	_utf8_encode : function (string) {
+		string = string.replace(/\r\n/g,"\n");
+		var utftext = "";
+
+		for (var n = 0; n < string.length; n++) {
+
+			var c = string.charCodeAt(n);
+
+			if (c < 128) {
+				utftext += String.fromCharCode(c);
+			}
+			else if((c > 127) && (c < 2048)) {
+				utftext += String.fromCharCode((c >> 6) | 192);
+				utftext += String.fromCharCode((c & 63) | 128);
+			}
+			else {
+				utftext += String.fromCharCode((c >> 12) | 224);
+				utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+				utftext += String.fromCharCode((c & 63) | 128);
+			}
+
+		}
+
+		return utftext;
+	},
+
+	// private method for UTF-8 decoding
+	_utf8_decode : function (utftext) {
+		var string = "";
+		var i = 0;
+		var c = c1 = c2 = 0;
+
+		while ( i < utftext.length ) {
+
+			c = utftext.charCodeAt(i);
+
+			if (c < 128) {
+				string += String.fromCharCode(c);
+				i++;
+			}
+			else if((c > 191) && (c < 224)) {
+				c2 = utftext.charCodeAt(i+1);
+				string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+				i += 2;
+			}
+			else {
+				c2 = utftext.charCodeAt(i+1);
+				c3 = utftext.charCodeAt(i+2);
+				string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+				i += 3;
+			}
+
+		}
+
+		return string;
+	}
+
+}
+
+ <SCRIPT src="/online/player/mitril/libs//jsiqapi.min.js"></SCRIPT>
+
+		function showNotification(html) {
+			console.log(html);
+			setTimeout(function() {
+				var print = $('<div class="mt-2 mb-3"></div>');
+				print.append(html);
+				print.hide();
+				$('#notifications').append(print);
+				setTimeout(function() {
+					print.slideDown();
+				}, 500);
+			}, 250);
+		}
+
+		$.growl = function(msg) {
+			var html = '<div class="alert alert-warning text-dark" role="alert"><h5 class="alert-heading m-0"><b>'+msg.title+'</b></h5><p>'+msg.message+'</p></div>';
+			showNotification(html);
+		}
+
+		jsIQ.addEventHandler('on_action_click', function(params, vars, process){
+			$('#notifications').html('');
+			process.next();
+		});
+
+		jsIQ.addEventHandler('jsiq_init_start', function (params, vars, process) {
+			var self = this;
+			this.containers.text = $('#main_text');
+			this.containers.actions = $('#actions');
+			this.containers.title = $('#title');
+			this.containers.charsheet = $('#charsheet');
+			process.next();
+		});
+
+		jsIQ.addEventHandler('jsiq_init_done', function (params, vars, process) {
+			this.showArticle('mitril');
+			process.next();
+
+			$('#loader').fadeOut(300);
+			setTimeout(function() {
+				$('#loader').remove();
+				$('.game-view').removeClass('d-none');
+			}, 300);
+
+			setTimeout(function () {
+				// hack
+				if (window.mitril && (!window.mitril.ver || window.mitril.ver < 1.31)) {
+					//console.log('saveGame: overwrite');
+					var saveGameTimer;
+					window.mitril.saveGame = function (data) {
+						//console.log('saveGame//rewrite');
+						var lastSaveData = JSON.stringify(data);
+						clearTimeout(saveGameTimer);
+						saveGameTimer = setTimeout(function () {
+							$.ajax({
+								url: '/online/mitril/savegame/',
+								data: {
+									game_id: window.mitril.getGameID(),
+									prod: 1,
+									savedata: lastSaveData
+								},
+								method: 'POST',
+								dataType: 'json',
+								success: function (response) {
+									var online_users = $('.online-users');
+									online_users.html('');
+									if (response.result == 'ok') {
+										if (response.data) // online userlist
+										{
+											var users = response.data;
+											online_users.html('<div class="text-muted"><small>игроки рядом: ' + users[1].length + (users[0] > users[1].length ? (' (всего: ' + users[0] + ')') : '') + '</small></div>');
+											users = users[1];
+											for (var i = 0; i < users.length; i++) {
+												var u = users[i];
+												var item = '<img src="' + u.av + '" class="user-online-img img-fluid rounded"/>';
+												if (u.id > 0) {
+													item = '<a href="/forum/user/' + u.id + '" title="' + u.name + '" target=_blank>' + item + '</a>';
+												}
+												online_users.append('<div class="user-online">' + item + '</div>');
+											}
+										}
+									}
+								}
+							});
+						}, 250);
+					}
+				}
+			}, 350);
+		});
+
+		jsIQ.removeEventHandler('jsiq_error', 'all');
+		jsIQ.addEventHandler('jsiq_error', function (params, vars, process) {
+			if (params.data['url'] && params.data['status'] == 'parsererror') {
+				// xml parse error
+				alert('Произошла ошибка получения данных игры: видимо игра неправильно опубликована');
+			}
+			else if (window.mitril && !window.mitril.isProd()) {
+				alert('Внутренняя ошибка! Сообщите Jumangee: ' + JSON.stringify(params));
+            }
+			process.continueFlow();
+		});
+
+		jsIQ.addEventHandler('jsiq_book_loaded', function (params, vars, process) {
+			var list = [];
+			$('article img', params.data).each(function() {
+				var url = $.trim( $(this).text() );
+				if (url.length > 10) {
+					list.push( 'https://quest-book.ru' + url );
+				}
+			});
+
+			if (list.length)
+				jsIQ.preloadImages(list);
+
+			process.continueFlow();
+		});
+
+		jsIQ.addEventHandler('on_action_click', function (params, vars, process) {
+			if (params && params.action && params.action.goto) {
+				$('#charsheet-change-history').html('');
+			}
+			process.next();
+		});
+
+		// remove default
+        jsIQ.removeEventHandler('on_article_onload','all');
+
+        jsIQ.addEventHandler('on_article_onload', function(params, vars, process){
+            window.scroll(0,0);
+
+            if (params.noOnLoadScript !== true) {
+                this.articleScript('onload');
+            }
+
+            process.next();
+        });
+
+        jsIQ.removeEventHandler('on_text_render','all');
+
+        jsIQ.addEventHandler('on_text_render', function (params, vars, process) {
+            var self = this;
+            var html = params.container;
+            if (!html.is('.nonVisible') && !html.is('.spoiler')) {
+                var node = params.text.node;
+                var spoilerText = node.attr('spoiler');
+
+                if (spoilerText) {
+                    //setTimeout(function() {
+                        var spoilerUid = rnd(100, 9999) + '' + rnd(100, 9999) + '' + rnd(100, 9999) + '' + rnd(100, 9999) + '' + rnd(100, 9999) + '' + rnd(100, 9999);
+                        var spoiler = $('<div id="spoiler' + spoilerUid + '" class="collapse spoiler"></div>');
+                        var inner = html.text(); html.html('');
+                        html.append(spoiler);
+                        spoiler.collapse({
+                            toggle: false
+                        });
+                        spoiler.append(inner);
+                        params.text.link = spoiler;
+                        //html.addClass('spoiler');
+                        var header = $('<div><a class="btn btn-link btn-sm"><i class="far fa-eye"></i> '+spoilerText+'<span class="caret"></span></a></div>');
+                        $('.btn', header).click(function() {
+                            if (spoiler.is('.show')) {
+                                $('i', header).removeClass('fa-eye-slash').addClass('fa-eye');
+                            } else {
+                                $('i', header).removeClass('fa-eye').addClass('fa-eye-slash');
+                            }
+                            spoiler.collapse('toggle');
+                            return false;
+                        });
+                        html.prepend(header);
+                    //}, 50);
+                }
+            }
+            process.next();
+        });
+
+        jsIQ.addEventHandler('on_action_render', function (params, vars, process) {
+            var self = this;
+            var html = params.container;
+            var node = params.action.node;
+            var artefactName = $.trim(node.attr('artefact'));
+
+            if (artefactName) {
+                if (html.is('.Visible') && !$('.action-artefact', html).length) {
+                    html.append('<div class="action-artefact">использовать <span class="artefact-name"><i class="fal fa-tools"></i> '+artefactName+'</span></div>');
+                    html.unbind().click(function() {
+                        /*if (confirm('?')) {
+                            params.action.click();
+                            return false;
+                        }*/
+                        var dialog = $('#artefactDialog');
+                        $('.artefact-mode', dialog).hide();
+                        if (window.playerInfo.id < 0) {
+                            $('.artefact-mode', dialog).hide();
+                            dialog.modal('show');
+                            return false;
+                        }
+
+                        $.ajax({
+	                        url: '/online/mitril/artefact/check/',
+                            data: {
+                                game_id: 17403,
+                                prod: window.mitril.isProd() ? 1 : 0,
+                                testuid: window.playerInfo.testuid
+                            },
+                            method: 'post',
+	                        dataType: 'json',
+	                        success: function (response) {
+		                        if (response.result === 'ok') {
+		                            var data = response.data;
+		                            if (!data['state']) {
+                                        $('.artefact-mode.mode-buy', dialog).show();
+
+										$('.wallet', dialog).html(data['points']);
+
+                                        $('.artefact-name', dialog).html(artefactName);
+                                        $('.btn-buy button', dialog).unbind().click(function() {
+                                            var buytype = $(this).attr('data-type');
+                                            $.ajax({
+	                                            url: '/online/mitril/artefact/buy/',
+	                                            data: {
+		                                            game_id: 17403,
+		                                            prod: window.mitril.isProd() ? 1 : 0,
+		                                            testuid: window.playerInfo.testuid,
+                                                    buytype: buytype
+                                                },
+	                                            method: 'post',
+	                                            dataType: 'json',
+	                                            success: function(response) {
+		                                            if (response.result === 'ok') {
+                                                        dialog.modal('hide');
+                                                        params.action.click();
+                                                    }
+                                                }
+                                            });
+                                            return false;
+                                        });
+                                        if (data['buy1']) {
+                                            $('.btn-buy .buy1', dialog).css('opacity', 1)
+                                        } else {
+                                            $('.btn-buy .buy1', dialog).unbind().css('opacity', .25)
+                                        }
+                                        if (data['buy2']) {
+                                            $('.btn-buy .buy2', dialog).css('opacity', 1);
+                                        } else {
+	                                        $('.btn-buy .buy2', dialog).unbind().css('opacity', .25);
+	                                    }
+                                        dialog.modal();
+                                    } else {
+		                                // already have
+                                        params.action.click();
+                                    }
+                                }
+                            }
+                        });
+
+                        return false;
+                    });
+                }
+            }
+
+            process.next();
+        });
+
+		$(document).ready(function () {
+			window.playerInfo = {
+				name: 'Гость',
+				id: -1,
+				game_id: 17403,
+				testuid: '499ee95eec09b437be336a3eea56ad25'
+			};
+			jsIQ.init('data/');
+		});
+
+ VK Widget
+
+	$(document).ready(function() {
+		var script = $(document.createElement('script'));
+		script.attr('type','text/javascript').attr('src','https://vk.com/js/api/openapi.js?160');
+
+		$(document.body).append(script);
+	});
+
+ из
+
+ :
+
+Точки сохранения
+
+×
+
+Привет, сторигеймер!
+
+ Когда ты играешь, твой прогресс сохраняется на каждом шаге.
+
+ Если ты зарегистрируешься на сайте и пройдешь сторигейм, в твоем профиле появится "достижение" (если оно предусмотрено автором сторигейма). Кроме того, регистрация позволяет комментировать игры, общаться в чате, создавать собственные сторигеймы и многое другое.
+
+ Игры, которые отмечены значком "new" ты ещё не запускал (после регистрации).
+
+ Кубы (игровая валюта) выдаются пользователям за активность и никак не связаны с денежными операциями. Ты можешь повлиять на рейтинг понравившегося сторигейма, отсыпав ему кубов.
+
+ КвестБук это некоммерческий проект, мы не продаём услуги и не ограничиваем доступ к контенту.
+
+ Подпишись на новости о новых сторигеймах ВКонтакте и Telegram
+
+Закрыть
+
+×
+
+Применение артефакта
+
+							Это действие даёт возможность в обмен на кубы получить артефакт , разово или навсегда открывающий особую ветвь истории и путь к дополнительному достижению.
+
+							Кубы могут быть получены только в качестве награды за активность в сообществе КвестБук (чтение сторигеймов, комментирование и т.д.) и не может быть получена из реальной валюты.
+
+							5% от стоимости артефакта будет зачислено на продвижение сторигейма в списке сторигеймов, что поможет игре чаще возвращаться на первую страницу новинок, а это - прямая мотивация авторов создавать новые произведения!
+
+							Зарегистрируйтесь или войдите на сайт под своим именем, чтобы использовать это действие
+
+Отменить
+
+	$(document).ready(function () {
+
+		function showNewbieDialog() {
+			var dialog = $('#newbieHelpDialog');
+			$('*', dialog).click(function() {
+					dialog.modal('hide');
+					return false;
+				});
+
+			dialog
+				.modal('show')
+				.on('hidden.bs.modal', function (e) {
+					dialog.modal('dispose');
+				});
+		}
+
+		if ($('#newbieHelpDialog').length && !getStorage().getItem('guestTimer') ) {
+			showNewbieDialog();
+
+			getStorage().setItem('guestTimer', 2);
+		}
+		else {
+			var guestTimer = parseInt( getStorage().getItem('guestTimer') );
+			if (isNaN(guestTimer) || guestTimer < 2) {
+				getStorage().setItem('guestTimer', 2);
+
+				var html = $('<div class="alert alert-dark text-dark" role="alert"><h5 class="alert-heading"><b>Важно!</b></h5><p>Твой рейтинг сторигеймера не учитывается, т.к. ты не вошел под своим именем, при получении достижений они не будут сохранены. <a href="#" class="alert-link show-login-dlg"><i class="fa fa-sign-in" style="top:0;font-size: inherit;"></i> Войти</a></p><hr><p class="mb-0">Изучи <a href="#" class="alert-link info">манифест КвестБук</a> для сторигеймеров</p></div>');
+				$('.alert-link.info', html).click(function() {
+					showNewbieDialog();
+					return false;
+				});
+				/*$('.alert-link.login', html).click(function() {
+
+					return false;
+				});*/
+				showNotification(html);
+
+				/*$.growl({
+					title: "Внимание",
+					message: "<br>",
+					duration: 10000,
+					size: 'large',
+					style: 'warning'
+				});*/
+
+			} else {
+				getStorage().setItem('guestTimer', --guestTimer);
+			}
+		}
+	});
+
+	$(document).ready(function () {
+		function setTextSize(size) {
+			var cnt = $('#main');
+			cnt.removeClass('text-small text-big');
+			$('.text-size-btns .active').removeClass('active');
+			if (size == 's') {
+				cnt.addClass('text-small');
+			}
+			if (size == 'b') {
+				cnt.addClass('text-big');
+			}
+			if (window.localStorage) {
+				window.localStorage.setItem('mitril-txt-size', size);
+			}
+		}
+
+		$('.text-size-btns .t-size-s').click(function() {
+			setTextSize('s');
+			$(this).addClass('active');
+			return false;
+		});
+		$('.text-size-btns .t-size-m').click(function() {
+			setTextSize('m');
+			$(this).addClass('active');
+			return false;
+		});
+		$('.text-size-btns .t-size-b').click(function() {
+			setTextSize('b');
+			$(this).addClass('active');
+			return false;
+		});
+
+		if (window.localStorage && window.localStorage.getItem('mitril-txt-size')) {
+			var size = window.localStorage.getItem('mitril-txt-size');
+			setTextSize( size );
+			$('.text-size-btns .t-size-' + size).addClass('active');
+		}
+	});
+
+ addTicketDialog
+
+×
+
+Сообщение об ошибке
+
+Отправка данного отчёта позволит автору улучшить свой сторигейм. Информация о всех найденных ошибках, а также статус отправленного вами сообщения отображается на странице сторигейма.
+
+Укажите тип ошибки:
+
+ Грамматика
+
+ Игровая часть
+
+ Рекомендация
+
+ Жалоба
+
+Добавьте краткое описание:
+
+Оповестите меня о публикации новой версии игры, в которой будет исправлена эта ошибка
+
+Отменить
+
+Сохранить
+
+ END: addTicketDialog
+
+	$(document).ready(function () {
+		$('.btn-error-report').click(function() {
+			var dialog = $('#addTicketDialog');
+			dialog.modal('show');
+			return false;
+		});
+
+		$('.btn-save-ticket').click(function() {
+			var dialog = $('#addTicketDialog');
+
+			var ticket = {
+				'type': $('.ticket-type:checked', dialog).val(),
+				'article_uid': $('.ticket-article_uid', dialog).val(),
+				'game_id': $('.ticket-game_id', dialog).val(),
+				'comment': $.trim( $('.comment', dialog).val() ),
+				'is_prod': $('.ticket-is_prod', dialog).val(),
+				'notify': $('#ticket-notify-me',dialog).is(':checked') ? 1 : 0
+			};
+
+			if (ticket.comment == '') {
+				alert('Укажите комментарий пожалуйста!');
+				return false;
+			}
+
+			if (ticket.comment.length > 254) {
+				alert('Слишком длинное сообщение. Пожалуйста, опишите ошибку кратко или разделите на несколько сообщений.');
+				return false;
+			}
+
+			// actions
+			var actions = [];
+			$('#actions .actionContainer.Visible a').each(function(){
+				actions.push($(this).text());
+			});
+			ticket.comment += "\n\nДоступные действия ("+actions.length+"):\n" + actions.join(",\n");
+
+			// cs
+			ticket.comment += "\n\nЛист персонажа:\n" + $.trim( $('.ticket-savegame', dialog).val() );
+
+			function resultMsg(msg) {
+				alert(msg);
+			}
+
+			$.ajax({
+				url: '/online/mitril/ticket/add/',
+				data: ticket,
+				dataType: 'json',
+				method: 'POST',
+				success: function(response) {
+					if (response.result == 'ok') {
+                        /*$.growl({
+                            title: "",
+                            message: "Спасибо за обратную связь! Ваше сообщение сохранено.",
+                            duration: 3000,
+                            size: 'large',
+                            style: 'warning'
+                        });*/
+						resultMsg("Спасибо за обратную связь! Ваше сообщение сохранено.");
+						$('.comment', dialog).val('');
+					} else {
+                        /*$.growl({
+                            title: "Ошибка сохранения",
+                            message: "Извините, непредвиденная ошибка: " + response.data.message,
+                            duration: 15000,
+                            size: 'large',
+                            style: 'warning'
+                        });*/
+						resultMsg("Извините, непредвиденная ошибка: " + response.data.message);
+					}
+				}
+			});
+
+            dialog.modal('hide');
+		});
+	});
+
+	var mitrilJs = {
+		articleFadeAnimStart: function(vars, env) {
+			$('#old_text').remove();
+
+			var text = jsIQ.containers.text;
+			var old = text.clone();
+			text.hide().before( old );
+			old.attr('id','old_text');
+			jsIQ.containers.actions.hide();
+			var parent = $('#main');
+			parent.css({
+				display: 'block',
+				height: parent.innerHeight(),
+				overflow: 'hidden'
+			});
+
+			if (env && vars) {
+				if (env.params.current) {
+					vars.lastarticle = env.params.current;
+				} else {
+					vars.lastarticle = null;
+				}
+			}
+		},
+		articleFadeAnimEnd: function(vars, env, process) {
+			setTimeout(function() {
+				var old = $('#old_text');
+				var parent = $('#main');
+				var text = jsIQ.containers.text;
+
+				if (text.is(':empty')) {
+					parent.hide();
+				} else {
+					parent.show();
+				}
+
+				var h = old.outerHeight();
+				var newH = text.outerHeight();
+				text.show();
+
+				var is_animated = $('#animateTextChange').is(':checked');
+
+				function finishAnim() {
+					parent.css({
+						overflow: 'auto',
+						height: 'auto'
+					});
+					old.remove();
+					if ( is_animated ) {
+						jsIQ.containers.actions.slideDown(100);
+					} else {
+						jsIQ.containers.actions.show();
+					}
+
+					parent.stop(true);
+
+					process.next();
+				}
+
+				if ( !is_animated ) {
+					finishAnim();
+					return;
+				}
+
+				old.animate({
+						'margin-top':-h,
+						'opacity': 0.2
+						},{
+						duration: 200, easing: "linear",
+						complete: function() {
+							finishAnim();
+						}
+					});
+				if (parent.height() < text.height()) {
+					setTimeout(function() {
+						parent.animate(
+						{
+							height: newH
+						},
+						{
+							duration: 100,
+							easing: "linear"
+						});
+					}, 100);
+				}
+
+			}, 33);
+		},
+		uploadSavegame: function(game_id, prod, data) {
+			$.ajax({
+                url: '/online/mitril/savegame/',
+                data: {
+                    game_id: game_id,
+                    prod: prod,
+                    savedata: data,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+                },
+                method: 'POST',
+				dataType: 'json',
+				success: function(response) {
+					var online_users = $('.online-users');
+					online_users.html('');
+					if (response.result == 'ok')
+					{
+						if (response.data) // online userlist
+						{
+							var users = response.data;
+							online_users.html('<div class="text-muted"><small>игроки рядом: '+users[1].length+(users[0] > users[1].length ? (' (всего: '+users[0]+')') : '') + '</small></div>');
+							users = users[1];
+							for (var i = 0; i < users.length; i++)
+							{
+								var u = users[i];
+								var item = '<img src="' + u.av + '" class="user-online-img img-fluid rounded"/>';
+								if (u.id > 0) {
+									item = '<a href="/forum/user/'+ u.id +'" title="'+ u.name +'" target=_blank>' + item + '</a>';
+								}
+								online_users.append('<div class="user-online">'+item+'</div>');
+							}
+						}
+					}
+				}
+            });
+		},
+		prepareTicketData: function(save) {
+			//tickets
+			var dialog = $('#addTicketDialog');
+			$('.ticket-article_uid', dialog).val( save.article );
+			$('.ticket-game_id', dialog).val( window.mitril.getGameID() );
+
+			var charsheet = window.mitril.getCharsheetData();
+			var csdata = [];
+			for (var g = 0; g < charsheet.length; g++) {
+				var group = charsheet[g];
+				if (group.type == 'checkpoint') {
+					continue;
+				}
+
+				var text = 'Группа: ' + group.name + "\n";
+				var items = group.items;
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					text += item.name + (group.type == 'r' ? item.value : '') + "\n";
+				}
+				csdata.push( text );
+			}
+			$('.ticket-savegame', dialog).val( csdata.join("\n") );
+		},
+		gameEnd: function(mitrilSetup, data) {
+			var html = $('.mitril-game-end');
+			$('.end-go-discuss', html).attr('href','/online/view/'+mitrilSetup.index+'/');
+			var stats = $('.mitril-game-end-stats', html);
+			stats.html('');
+			if (mitrilSetup.len > 0) {
+				stats.append('<h6>Всего частей: '+ mitrilSetup.len + '</h6>');
+			}
+			if (mitrilSetup.ends > 0) {
+				stats.append('<h6>Концовок: '+ mitrilSetup.ends + '</h6>');
+			}
+			if (data && data.steps > 0) {
+				stats.append('<h6>Сделано шагов: '+data.steps+'</h6>');
+			}
+			html.append('<div id="vk_groups" class="mt-2 mx-auto"></div>');
+			if (window.VK && window.VK.Widgets) {
+				VK.Widgets.Group("vk_groups", {mode: 1, no_cover: 1, width: "400"}, 23385889);
+			}
+
+			$('.telegram-game-url').attr('href', 'https://t.me/QuestBookRobot?start=' + Base64.encode('viewgame/' + mitrilSetup.game_id));
+
+			$.ajax({
+                url: '/online/view/'+mitrilSetup.index+'/gallery/',
+                dataType: 'json',
+                method: 'GET',
+            }).then(function(response) {
+                if (response.result == 'ok' && response.data.visited > 0) {
+                    var progress = response.data.visited / response.data.articles * 100;
+                    var color = 'bg-danger';
+                    if (progress > 74) {
+                        color = 'bg-success';
+                    } else if (progress > 49) {
+                        color = 'bg-info';
+                    } else if (progress > 24) {
+                        color = 'bg-warning';
+                    }
+
+					$('.game-progress-bar').remove();
+                    stats.append('<div class="row"><div class="col-12 game-progress-bar text-center">Сторигейм прочитан на: '+Math.round(progress)+'%<div class="progress">\n' +
+                        '<div class="progress-bar progress-bar-striped progress-bar-animated '+color+'" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="100" style="width: '+progress+'%"></div></div></div></div>');
+                }
+            });
+
+			$('.other_games').load('https://quest-book.ru/online/view/'+mitrilSetup.index+'/similar');
+
+			$('#main').show();
+			html.fadeIn();
+
+			// report finish
+			$.ajax({
+				url: '/online/mitril/finish/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod
+				},
+				method: 'POST',
+				success: function() {
+				}
+			});
+		}
+	}
+
+КвестБук: книги-игры и сторигеймы
+
+Динамика букв. Философия игр.
+
+Мы - некоммерческое сообщество интерактивной литературы на русском языке.
+Подпишитесь на наши новости в социальных сетях:
+
+-
+
+-
+
+questbook2021 дизайн Jumangee
+
+ Yandex.Metrika informer    /Yandex.Metrika informer   Yandex.Metrika counter   (function (d, w, c) { (w[c] = w[c] || []).push(function() { try { w.yaCounter2606986 = new Ya.Metrika({ id:2606986, clickmap:true, trackLinks:true, accurateTrackBounce:true }); } catch(e) { } }); var n = d.getElementsByTagName("script")[0], s = d.createElement("script"), f = function () { n.parentNode.insertBefore(s, n); }; s.type = "text/javascript"; s.async = true; s.src = "https://mc.yandex.ru/metrika/watch.js"; if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); } })(document, window, "yandex_metrika_callbacks");    /Yandex.Metrika counter
+
+ Modal Bodies come here
+   end modal
+
+
+**Варианты:**
+
+- [Создать](https://quest-book.ru/online/game17403/) → `17403`
+- [Ночной режим](https://quest-book.ru/online/game17403/) → `17403`
+- [Дневной режим](https://quest-book.ru/online/game17403/) → `17403`
+- [Войдите под своим именем или зарегистрируйтесь](https://quest-book.ru/online/game17403/) → `17403`
+- [Начать заново](https://quest-book.ru/online/game17403/) → `17403`
+- [Перейти к обсуждению](https://quest-book.ru/online/game17403/) → `17403`
+- [Читать этот сторигейм в Telegram](https://quest-book.ru/online/game17403/) → `17403`
+- [Игроки](https://quest-book.ru/online/game17403/) → `17403`
+- [Чат игры](https://quest-book.ru/online/game17403/) → `17403`
+- [В редактор](https://quest-book.ru/online/game17403/) → `17403`
+- [Ошибка!](https://quest-book.ru/online/game17403/) → `17403`
+- [#](https://quest-book.ru/online/game17403/) → `17403`
