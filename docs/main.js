@@ -50,10 +50,14 @@ async function loadIndex() {
       return;
     }
     const ul = document.createElement('ul');
+    let added = 0;
     data.items.slice(0, 50).forEach((item) => {
-      const li = document.createElement('li');
       const base = normalisePath(item.path);
-      const prefix = base ? `${base}/` : '';
+      if (!base) {
+        return;
+      }
+      const prefix = base.endsWith('/') ? base : `${base}/`;
+      const li = document.createElement('li');
       const title = document.createElement('strong');
       title.textContent = item.title || 'Без названия';
       const src = document.createElement('a');
@@ -90,7 +94,12 @@ async function loadIndex() {
         jsonUiLink,
       );
       ul.appendChild(li);
+      added += 1;
     });
+    if (!added) {
+      $('#list').textContent = 'Нет выгрузок.';
+      return;
+    }
     $('#list').innerHTML = '';
     $('#list').appendChild(ul);
   } catch (error) {
